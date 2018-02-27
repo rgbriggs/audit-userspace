@@ -350,6 +350,9 @@ extern "C" {
 #ifndef AUDIT_FEATURE_BITMAP_FILTER_FS
 #define AUDIT_FEATURE_BITMAP_FILTER_FS		0x00000040
 #endif
+#ifndef AUDIT_FEATURE_BITMAP_CONTAINERID
+#define AUDIT_FEATURE_BITMAP_CONTAINERID	0x00000080
+#endif
 
 /* Defines for interfield comparison update */
 #ifndef AUDIT_OBJ_UID
@@ -374,6 +377,10 @@ extern "C" {
 
 #ifndef AUDIT_FSTYPE
 #define AUDIT_FSTYPE 26
+#endif
+
+#ifndef AUDIT_CONTID
+#define AUDIT_CONTID 27
 #endif
 
 #ifndef AUDIT_COMPARE_UID_TO_OBJ_UID
