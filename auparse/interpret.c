@@ -2842,6 +2842,13 @@ static const char *print_seccomp_code(const char *val)
 	return out;
 }
 
+static const char *print_contid(const char *val)
+{
+	if (strcmp(val, "18446744073709551615") == 0)
+		return strdup("unset");
+	return strdup(val);
+}
+
 int lookup_type(const char *name)
 {
 	int i;
@@ -3081,6 +3088,9 @@ unknown:
 			break;
 		case AUPARSE_TYPE_FANOTIFY:
 			out = print_fanotify(id->val);
+			break;
+		case AUPARSE_TYPE_CONTID:
+			out = print_contid(id->val);
 			break;
 		case AUPARSE_TYPE_MAC_LABEL:
 		case AUPARSE_TYPE_UNCLASSIFIED:
