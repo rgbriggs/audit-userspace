@@ -62,6 +62,7 @@ const char *event_vmname = NULL;
 long long event_exit = 0;
 int event_exit_is_set = 0;
 int event_ppid = -1, event_session_id = -2;
+unsigned long long event_contid = -1;
 int event_debug = 0, event_machine = -1;
 
 /* These are used by aureport */
