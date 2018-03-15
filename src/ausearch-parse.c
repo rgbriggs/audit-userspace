@@ -52,6 +52,8 @@ static int parse_path(const lnode *n, search_items *s);
 static int parse_user(const lnode *n, search_items *s, anode *avc);
 static int parse_obj(const lnode *n, search_items *s);
 static int parse_login(const lnode *n, search_items *s);
+static int parse_container_op(const lnode *n, search_items *s);
+static int parse_container_id(const lnode *n, search_items *s);
 static int parse_daemon1(const lnode *n, search_items *s);
 static int parse_daemon2(const lnode *n, search_items *s);
 static int parse_sockaddr(const lnode *n, search_items *s);
@@ -112,6 +114,9 @@ int extract_search_items(llist *l)
 				break;
 			case AUDIT_LOGIN:
 				ret = parse_login(n, s);
+				break;
+			case AUDIT_CONTAINER_OP:
+				ret = parse_container_op(n, s);
 				break;
 			case AUDIT_IPC:
 			case AUDIT_OBJ_PID:
@@ -178,6 +183,9 @@ int extract_search_items(llist *l)
 				break;
 			case AUDIT_TTY:
 				ret = parse_tty(n, s);
+				break;
+			case AUDIT_CONTAINER_ID:
+				ret = parse_container_id(n, s);
 				break;
 			default:
 				if (event_debug)
@@ -1440,6 +1448,55 @@ static int parse_login(const lnode *n, search_items *s)
 			return 11;
 		if (term)
 			*term = ' ';
+	}
+	return 0;
+}
+
+static int parse_container_op(const lnode *n, search_items *s)
+{
+	char *ptr, *str, *term = n->message;
+
+	// skip op
+	// skip opid
+	// get contid
+	if (event_contid != -1) {
+		str = strstr(term, "contid=");
+		if (str == NULL)
+			return 46;
+		ptr = str + 7;
+		term = strchr(ptr, ' ');
+		if (term == NULL)
+			return 47;
+		*term = 0;
+		errno = 0;
+		s->contid = strtoull(ptr, NULL, 10);
+		if (errno)
+			return 48;
+		*term = ' ';
+	}
+	// skip old-contid
+	return 0;
+}
+
+static int parse_container_id(const lnode *n, search_items *s)
+{
+	char *ptr, *str, *term = n->message;
+
+	// get contid
+	if (event_contid != -1) {
+		str = strstr(term, "contid=");
+		if (str == NULL)
+			return 49;
+		ptr = str + 7;
+		term = strchr(ptr, ' ');
+		if (term)
+			return 50;
+		*term = 0;
+		errno = 0;
+		s->contid = strtoull(ptr, NULL, 10);
+		if (errno)
+			return 51;
+		*term = ' ';
 	}
 	return 0;
 }
