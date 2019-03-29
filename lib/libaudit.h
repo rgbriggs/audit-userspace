@@ -34,6 +34,7 @@ extern "C" {
 #include <linux/netlink.h>
 #include <linux/audit.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <syslog.h>
 
 
@@ -249,6 +250,10 @@ extern "C" {
 
 #ifndef AUDIT_CONTAINER_OP
 #define AUDIT_CONTAINER_OP	1020    /* Container creation notice */
+#endif
+
+#ifndef AUDIT_SIGNAL_INFO2
+#define AUDIT_SIGNAL_INFO2	1021    /* auditd signal sender info */
 #endif
 
 #ifndef AUDIT_MMAP
@@ -500,7 +505,14 @@ extern "C" {
 struct audit_sig_info {
         uid_t           uid;
         pid_t           pid;
-	char		ctx[0];
+	char		ctx[];
+};
+
+struct audit_sig_info2 {
+	uid_t		uid;
+	pid_t		pid;
+	uint32_t	cid_len;
+	char		data[];
 };
 
 /* defines for audit subsystem */
@@ -528,6 +540,7 @@ struct audit_reply {
 	char                    *message;
 	struct nlmsgerr         *error;
 	struct audit_sig_info   *signal_info;
+	struct audit_sig_info2  *signal_info2;
 	struct daemon_conf      *conf;
 #ifdef AUDIT_FEATURE_VERSION
 	struct audit_features	*features;
@@ -605,6 +618,7 @@ extern uint32_t audit_get_session(void);
 extern uint64_t audit_get_containerid(void);
 extern int  audit_detect_machine(void);
 extern int audit_determine_machine(const char *arch);
+extern bool audit_signal_info_has_ctx(struct audit_reply *rep);
 extern char *audit_format_signal_info(char *buf, int len, char *op, struct audit_reply *rep, char *res);
 
 /* Translation functions */

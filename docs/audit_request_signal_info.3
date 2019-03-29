@@ -14,9 +14,22 @@ audit_request_signal_info requests that the kernel send information about the se
 struct audit_sig_info {
         uid_t           uid;
         pid_t           pid;
-        char            ctx[0];
+        char            ctx[];
 };
 .fi
+
+If the process has an audit container identifier, the signal info structure is as follows:
+
+.nf
+struct audit_sig_info2 {
+        uid_t           uid;
+        pid_t           pid;
+        uint32_t        cid_len;
+        char            data[];
+};
+.fi
+
+The data field contains first the audit container identifier list of length cid_len, followed by the SElinux context to the end of the structure.
 
 This function is likely to be used only by audit daemons and shouldn't be called by any other kind of program.
 
