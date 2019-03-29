@@ -14,6 +14,7 @@ audit_request_signal_info requests that the kernel send information about the se
 struct audit_sig_info {
         uid_t           uid;
         pid_t           pid;
+        uint64_t        cid;
         char            ctx[0];
 };
 .fi
