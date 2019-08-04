@@ -263,6 +263,18 @@ extern "C" {
 #define AUDIT_SET_CONTID	1023    /* set contid of specified pid */
 #endif
 
+#ifndef AUDIT_GET_LOGINUID
+#define AUDIT_GET_LOGINUID	1024    /* get current process loginuid */
+#endif
+
+#ifndef AUDIT_SET_LOGINUID
+#define AUDIT_SET_LOGINUID	1025    /* get current process loginuid */
+#endif
+
+#ifndef AUDIT_GET_SESSIONID
+#define AUDIT_GET_SESSIONID	1026    /* get current process sessionid */
+#endif
+
 #ifndef AUDIT_MMAP
 #define AUDIT_MMAP		1323 /* Descriptor and flags in mmap */
 #endif

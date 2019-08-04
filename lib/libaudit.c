@@ -890,27 +890,42 @@ int audit_make_equivalent(int fd, const char *mount_point,
  */
 uid_t audit_getloginuid(void)
 {
-	uid_t uid;
-	int len, in;
-	char buf[16];
+        if ((audit_get_features() & AUDIT_FEATURE_BITMAP_CONTAINERID) == 0) {
+		uid_t uid;
+		int len, in;
+		char buf[16];
 
-	errno = 0;
-	in = open("/proc/self/loginuid", O_NOFOLLOW|O_RDONLY);
-	if (in < 0)
-		return -1;
-	do {
-		len = read(in, buf, sizeof(buf));
-	} while (len < 0 && errno == EINTR);
-	close(in);
-	if (len < 0 || len >= sizeof(buf))
-		return -1;
-	buf[len] = 0;
-	errno = 0;
-	uid = strtol(buf, 0, 10);
-	if (errno)
-		return -1;
-	else
-		return uid;
+		errno = 0;
+		in = open("/proc/self/loginuid", O_NOFOLLOW|O_RDONLY);
+		if (in < 0)
+			return -1;
+		do {
+			len = read(in, buf, sizeof(buf));
+		} while (len < 0 && errno == EINTR);
+		close(in);
+		if (len < 0 || len >= sizeof(buf))
+			return -1;
+		buf[len] = 0;
+		errno = 0;
+		uid = strtol(buf, 0, 10);
+		if (errno)
+			return -1;
+		else
+			return uid;
+	} else {
+		int rc;
+		int seq;
+                int fd = audit_open();
+
+		if (fd < 0) {
+                        audit_msg(audit_priority(errno), "Error openning get loginuid req (%s)", strerror(-rc));
+			return -2;
+		}
+		rc = __audit_send(fd, AUDIT_GET_LOGINUID, NULL, 0, &seq);
+		if (rc < 0)
+			audit_msg(audit_priority(errno), "Error sending get loginuid request (%s)", strerror(-rc));
+		return rc;
+	}
 }
 
 /*
@@ -918,34 +933,52 @@ uid_t audit_getloginuid(void)
  */
 int audit_setloginuid(uid_t uid)
 {
-	char loginuid[16];
-	int o, count, rc = 0;
-
-	errno = 0;
-	count = snprintf(loginuid, sizeof(loginuid), "%u", uid);
-	o = open("/proc/self/loginuid", O_NOFOLLOW|O_WRONLY|O_TRUNC);
-	if (o >= 0) {
-		int block, offset = 0;
-
-		while (count > 0) {
-			block = write(o, &loginuid[offset], (unsigned)count);
-
-			if (block < 0) {
-				if (errno == EINTR)
-					continue;
-				audit_msg(LOG_ERR, "Error writing loginuid");
-				close(o);
-				return 1;
+        if ((audit_get_features() & AUDIT_FEATURE_BITMAP_CONTAINERID) == 0) {
+		char loginuid[16];
+		int o, count, rc = 0;
+	
+		errno = 0;
+		count = snprintf(loginuid, sizeof(loginuid), "%u", uid);
+		o = open("/proc/self/loginuid", O_NOFOLLOW|O_WRONLY|O_TRUNC);
+		if (o >= 0) {
+			int block, offset = 0;
+	
+			while (count > 0) {
+				block = write(o, &loginuid[offset], (unsigned)count);
+	
+				if (block < 0) {
+					if (errno == EINTR)
+						continue;
+					audit_msg(LOG_ERR, "Error writing loginuid");
+					close(o);
+					return 1;
+				}
+				offset += block;
+				count -= block;
 			}
-			offset += block;
-			count -= block;
+			close(o);
+		} else {
+			audit_msg(LOG_ERR, "Error opening /proc/self/loginuid");
+			rc = 1;
 		}
-		close(o);
+		return rc;
 	} else {
-		audit_msg(LOG_ERR, "Error opening /proc/self/loginuid");
-		rc = 1;
+		int rc;
+		int seq;
+                int fd = audit_open();
+		struct audit_loginuid_status { uid_t uid; } ls = { uid };
+
+		if (fd < 0) {
+                        audit_msg(audit_priority(errno), "Error openning set loginuid req (%s)", strerror(-rc));
+			return 1;
+		}
+		rc = audit_send(fd, AUDIT_SET_LOGINUID, &ls, sizeof(ls));
+		if (rc < 0) {
+			audit_msg(audit_priority(errno), "Error sending set loginuid request (%s)", strerror(-rc));
+			return 1;
+		}
+		return 0;
 	}
-	return rc;
 }
 
 /*
@@ -954,27 +987,42 @@ int audit_setloginuid(uid_t uid)
  */
 uint32_t audit_get_session(void)
 {
-	uint32_t ses;
-	int len, in;
-	char buf[16];
+        if ((audit_get_features() & AUDIT_FEATURE_BITMAP_CONTAINERID) == 0) {
+		uint32_t ses;
+		int len, in;
+		char buf[16];
 
-	errno = 0;
-	in = open("/proc/self/sessionid", O_NOFOLLOW|O_RDONLY);
-	if (in < 0)
-		return -2;
-	do {
-		len = read(in, buf, sizeof(buf));
-	} while (len < 0 && errno == EINTR);
-	close(in);
-	if (len < 0 || len >= sizeof(buf))
-		return -2;
-	buf[len] = 0;
-	errno = 0;
-	ses = strtoul(buf, 0, 10);
-	if (errno)
-		return -2;
-	else
-		return ses;
+		errno = 0;
+		in = open("/proc/self/sessionid", O_NOFOLLOW|O_RDONLY);
+		if (in < 0)
+			return -2;
+		do {
+			len = read(in, buf, sizeof(buf));
+		} while (len < 0 && errno == EINTR);
+		close(in);
+		if (len < 0 || len >= sizeof(buf))
+			return -2;
+		buf[len] = 0;
+		errno = 0;
+		ses = strtoul(buf, 0, 10);
+		if (errno)
+			return -2;
+		else
+			return ses;
+	} else {
+		int rc;
+		int seq;
+                int fd = audit_open();
+
+		if (fd < 0) {
+                        audit_msg(audit_priority(errno), "Error openning set contid req (%s)", strerror(-rc));
+			return -2;
+		}
+		rc = __audit_send(fd, AUDIT_GET_SESSIONID, NULL, 0, &seq);
+		if (rc < 0)
+			audit_msg(audit_priority(errno), "Error sending get session request (%s)", strerror(-rc));
+		return rc;
+	}
 }
 
 /*
