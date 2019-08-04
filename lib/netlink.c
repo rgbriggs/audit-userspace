@@ -152,6 +152,9 @@ static int adjust_reply(struct audit_reply *rep, int len)
     defined(HAVE_STRUCT_AUDIT_STATUS_FEATURE_BITMAP)
 	rep->features = NULL;
 #endif
+#ifdef AUDIT_FEATURE_BITMAP_CONTAINERID
+	rep->cont     = NULL;
+#endif
 	if (!NLMSG_OK(rep->nlh, (unsigned int)len)) {
 		if (len == sizeof(rep->msg)) {
 			audit_msg(LOG_ERR, 
@@ -197,6 +200,9 @@ static int adjust_reply(struct audit_reply *rep, int len)
 			break;
 		case AUDIT_SIGNAL_INFO2:
 			rep->signal_info2 = NLMSG_DATA(rep->nlh);
+			break;
+		case AUDIT_GET_CONTID:
+			rep->cont = NLMSG_DATA(rep->nlh);
 			break;
 	}
 	return len;

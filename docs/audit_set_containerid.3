@@ -1,0 +1,24 @@
+.TH "AUDIT_SET_CONTAINERID" "4" "Aug 2019" "Red Hat" "Linux Audit API"
+.SH NAME
+audit_set_containerid \- Set a program's container id value
+.SH SYNOPSIS
+.B #include <libaudit.h>
+.sp
+int audit_set_containerid(pid_t pid, uin64_t contid);
+
+.SH "DESCRIPTION"
+
+This function sets the pid task's attribute audit_containerid with the value of contid. The audit_containerid value may only be set by programs with the CAP_AUDIT_CONTROL capability. This normally means the root account.
+.sp
+The audit_containerid value is part of the task structure and is inheritted by child processes. It is used to track in which container a task has been placed. All container orchestrator/engines should set this value right before launching a process after setting up its resources.
+
+.SH "RETURN VALUE"
+
+This function returns 0 on success and non-zero otherwise.
+
+.SH "SEE ALSO"
+
+.BR audit_get_containerid (3).
+
+.SH AUTHOR
+Richard Guy Briggs

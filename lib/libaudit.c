@@ -669,7 +669,7 @@ int audit_request_rules_list_data(int fd)
 int audit_request_signal_info(int fd)
 {
 	int rc;
-	if (audit_get_containerid() == (long long)-2)
+	if (audit_get_containerid(0) == (long long)-2)
 		rc = audit_send(fd, AUDIT_SIGNAL_INFO, NULL, 0);
 	else
 		rc = audit_send(fd, AUDIT_SIGNAL_INFO2, NULL, 0);
@@ -981,29 +981,85 @@ uint32_t audit_get_session(void)
  * This function will retrieve the audit container identifier or -2 if
  * there is an error.
  */
-uint64_t audit_get_containerid(void)
+uint64_t audit_get_containerid(pid_t pid)
 {
-	uint64_t containerid;
-	int len, in;
-	char buf[32];
+        if ((audit_get_features() & AUDIT_FEATURE_BITMAP_CONTAINERID) == 0) {
+		return -2;
+	} else {
+                struct audit_reply rep;
+                int i;
+                int timeout = 40; /* tenths of seconds */
+                struct pollfd pfd[1];
+                int fd = audit_open();
+		struct audit_cont_status cs;
+                int rc;
 
-	errno = 0;
-	in = open("/proc/self/audit_containerid", O_NOFOLLOW|O_RDONLY);
-	if (in < 0)
+		if (fd < 0) {
+                        audit_msg(audit_priority(errno), "Error openning get contid req (%s)", strerror(-rc));
+			return -2;
+		}
+		cs.pid = pid;
+                rc = audit_send(fd, AUDIT_GET_CONTID, &cs, sizeof(cs));
+                if (rc < 0 && rc != -EINVAL) {
+			audit_close(fd);
+                        audit_msg(audit_priority(errno), "Error sending set contid req (%s)", strerror(-rc));
+                        return -2;
+                }
+                pfd[0].fd = fd;
+                pfd[0].events = POLLIN;
+
+                for (i = 0; i < timeout; i++) {
+                        do {
+                                rc = poll(pfd, 1, 100);
+                        } while (rc < 0 && errno == EINTR);
+                        rc = audit_get_reply(fd, &rep, GET_REPLY_NONBLOCKING,0); 
+                        if (rc > 0) {
+                                /* If we get done or error, break out */
+                                if (rep.type == NLMSG_DONE ||
+                                        rep.type == NLMSG_ERROR)
+                                        break;
+
+                                /* If its not get_contid, keep looping */
+                                if (rep.type != AUDIT_GET_CONTID)
+                                        continue;
+
+                                /* Found it... */
+				audit_close(fd);
+				if (rep.cont->pid == pid)
+                                	return rep.cont->id;
+				else
+					return -2;
+			}
+		}
+		audit_close(fd);
 		return -2;
-	do {
-		len = read(in, buf, sizeof(buf));
-	} while (len < 0 && errno == EINTR);
-	close(in);
-	if (len < 0 || len >= sizeof(buf))
+	}
+}
+
+/*
+ * This function returns 0 on success and 1 on failure
+ */
+int audit_set_containerid(pid_t pid, uint64_t contid)
+{
+        if ((audit_get_features() & AUDIT_FEATURE_BITMAP_CONTAINERID) == 0) {
 		return -2;
-	buf[len] = 0;
-	errno = 0;
-	containerid = strtoull(buf, 0, 10);
-	if (errno)
-		return -2;
-	else
-		return containerid;
+	} else {
+		int rc;
+		int seq;
+                int fd = audit_open();
+		struct audit_cont_status cs = { pid, contid };
+
+		if (fd < 0) {
+                        audit_msg(audit_priority(errno), "Error openning set audit_containerid req (%s)", strerror(-rc));
+			return 1;
+		}
+		rc = audit_send(fd, AUDIT_SET_CONTID, &cs, sizeof(cs));
+		if (rc < 0) {
+			audit_msg(audit_priority(errno), "Error sending set audit_containerid request (%s)", strerror(-rc));
+			return 1;
+		}
+		return 0;
+	}
 }
 
 int audit_rule_syscall_data(struct audit_rule_data *rule, int scall)

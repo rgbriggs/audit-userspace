@@ -255,6 +255,14 @@ extern "C" {
 #define AUDIT_SIGNAL_INFO2	1021    /* auditd signal sender info */
 #endif
 
+#ifndef AUDIT_GET_CONTID
+#define AUDIT_GET_CONTID	1022    /* get contid of specified pid */
+#endif
+
+#ifndef AUDIT_SET_CONTID
+#define AUDIT_SET_CONTID	1023    /* set contid of specified pid */
+#endif
+
 #ifndef AUDIT_MMAP
 #define AUDIT_MMAP		1323 /* Descriptor and flags in mmap */
 #endif
@@ -512,6 +520,11 @@ struct audit_message {
 // internal - forward declaration
 struct daemon_conf;
 
+struct audit_cont_status {
+	pid_t		pid;
+	uint64_t	id;
+};
+
 struct audit_reply {
 	int                      type;
 	int                      len;
@@ -531,6 +544,9 @@ struct audit_reply {
 	struct daemon_conf      *conf;
 #ifdef AUDIT_FEATURE_BITMAP_ALL
 	struct audit_features	*features;
+#endif
+#ifdef AUDIT_FEATURE_BITMAP_CONTAINERID
+	struct audit_cont_status	*cont;
 #endif
 	};
 };
@@ -602,7 +618,8 @@ extern int  audit_get_reply(int fd, struct audit_reply *rep, reply_t block,
 extern uid_t audit_getloginuid(void);
 extern int  audit_setloginuid(uid_t uid);
 extern uint32_t audit_get_session(void);
-extern uint64_t audit_get_containerid(void);
+extern uint64_t audit_get_containerid(pid_t pid);
+extern int audit_set_containerid(pid_t pid, uint64_t);
 extern int  audit_detect_machine(void);
 extern int audit_determine_machine(const char *arch);
 extern bool audit_signal_info_has_ctx(struct audit_reply *rep);

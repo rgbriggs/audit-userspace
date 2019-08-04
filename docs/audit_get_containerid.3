@@ -4,10 +4,10 @@ audit_get_containerid \- Get a program's container id value
 .SH SYNOPSIS
 .B #include <libaudit.h>
 .sp
-uin64_t audit_get_containerid(void);
+uin64_t audit_get_containerid(pid_t pid);
 
 .SH DESCRIPTION
-This function returns the task's audit container identifier attribute.
+This function returns the pid task's audit container identifier attribute.
 
 .SH "RETURN VALUE"
 
@@ -19,7 +19,7 @@ This function returns \-2 on failure. Additionally, in the event of a real error
 
 .SH "SEE ALSO"
 
-.BR audit_getloginuid (3).
+.BR audit_set_containerid (3).
 
 .SH AUTHOR
 Richard Guy Briggs
