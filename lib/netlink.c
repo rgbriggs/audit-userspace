@@ -154,6 +154,7 @@ static int adjust_reply(struct audit_reply *rep, int len)
 #endif
 #ifdef AUDIT_FEATURE_BITMAP_CONTAINERID
 	rep->cont     = NULL;
+	rep->capcontid = NULL;
 #endif
 	if (!NLMSG_OK(rep->nlh, (unsigned int)len)) {
 		if (len == sizeof(rep->msg)) {
@@ -200,6 +201,9 @@ static int adjust_reply(struct audit_reply *rep, int len)
 			break;
 		case AUDIT_SIGNAL_INFO2:
 			rep->signal_info2 = NLMSG_DATA(rep->nlh);
+			break;
+		case AUDIT_GET_CAPCONTID:
+			rep->capcontid = NLMSG_DATA(rep->nlh);
 			break;
 		case AUDIT_GET_CONTID:
 			rep->cont = NLMSG_DATA(rep->nlh);

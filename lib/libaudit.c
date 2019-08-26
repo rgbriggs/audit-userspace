@@ -1026,6 +1026,91 @@ uint32_t audit_get_session(void)
 }
 
 /*
+ * This function will retrieve the capability container identifier or -2 if
+ * there is an error.
+ */
+uint32_t audit_get_capcontid(pid_t pid)
+{
+        if ((audit_get_features() & AUDIT_FEATURE_BITMAP_CONTAINERID) == 0) {
+		return -2;
+	} else {
+                struct audit_reply rep;
+                int i;
+                int timeout = 40; /* tenths of seconds */
+                struct pollfd pfd[1];
+                int fd = audit_open();
+		struct audit_capcontid_status cs;
+                int rc;
+
+		if (fd < 0) {
+                        audit_msg(audit_priority(errno), "Error openning get capcontid req (%s)", strerror(-rc));
+			return -2;
+		}
+		cs.pid = pid;
+                rc = audit_send(fd, AUDIT_GET_CONTID, &cs, sizeof(cs));
+                if (rc < 0 && rc != -EINVAL) {
+			audit_close(fd);
+                        audit_msg(audit_priority(errno), "Error sending set capcontid req (%s)", strerror(-rc));
+                        return -2;
+                }
+                pfd[0].fd = fd;
+                pfd[0].events = POLLIN;
+
+                for (i = 0; i < timeout; i++) {
+                        do {
+                                rc = poll(pfd, 1, 100);
+                        } while (rc < 0 && errno == EINTR);
+                        rc = audit_get_reply(fd, &rep, GET_REPLY_NONBLOCKING,0); 
+                        if (rc > 0) {
+                                /* If we get done or error, break out */
+                                if (rep.type == NLMSG_DONE ||
+                                        rep.type == NLMSG_ERROR)
+                                        break;
+
+                                /* If its not get_contid, keep looping */
+                                if (rep.type != AUDIT_GET_CAPCONTID)
+                                        continue;
+
+                                /* Found it... */
+				audit_close(fd);
+				if (rep.capcontid->pid == pid)
+                                	return rep.capcontid->cap;
+				else
+					return -2;
+			}
+		}
+		audit_close(fd);
+		return -2;
+	}
+}
+
+/*
+ * This function returns 0 on success and 1 on failure
+ */
+int audit_set_capcontid(pid_t pid, uint32_t capcontid)
+{
+        if ((audit_get_features() & AUDIT_FEATURE_BITMAP_CONTAINERID) == 0) {
+		return -2;
+	} else {
+		int rc;
+		int seq;
+                int fd = audit_open();
+		struct audit_capcontid_status cs = { pid, capcontid };
+
+		if (fd < 0) {
+                        audit_msg(audit_priority(errno), "Error openning set capcontid req (%s)", strerror(-rc));
+			return 1;
+		}
+		rc = audit_send(fd, AUDIT_SET_CAPCONTID, &cs, sizeof(cs));
+		if (rc < 0) {
+			audit_msg(audit_priority(errno), "Error sending set capcontid request (%s)", strerror(-rc));
+			return 1;
+		}
+		return 0;
+	}
+}
+
+/*
  * This function will retrieve the audit container identifier or -2 if
  * there is an error.
  */

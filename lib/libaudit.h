@@ -275,6 +275,14 @@ extern "C" {
 #define AUDIT_GET_SESSIONID	1026    /* get current process sessionid */
 #endif
 
+#ifndef AUDIT_GET_CAPCONTID
+#define AUDIT_GET_CAPCONTID	1027    /* get contid of specified pid */
+#endif
+
+#ifndef AUDIT_SET_CAPCONTID
+#define AUDIT_SET_CAPCONTID	1028    /* set contid of specified pid */
+#endif
+
 #ifndef AUDIT_MMAP
 #define AUDIT_MMAP		1323 /* Descriptor and flags in mmap */
 #endif
@@ -532,6 +540,11 @@ struct audit_message {
 // internal - forward declaration
 struct daemon_conf;
 
+struct audit_capcontid_status {
+	pid_t		pid;
+	uint32_t	cap;
+};
+
 struct audit_cont_status {
 	pid_t		pid;
 	uint64_t	id;
@@ -559,6 +572,7 @@ struct audit_reply {
 #endif
 #ifdef AUDIT_FEATURE_BITMAP_CONTAINERID
 	struct audit_cont_status	*cont;
+	struct audit_capcontid_status	*capcontid;
 #endif
 	};
 };
