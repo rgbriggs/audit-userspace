@@ -992,6 +992,74 @@ uint32_t audit_get_session(void)
 }
 
 /*
+ * This function will retrieve the capability container identifier or -2 if
+ * there is an error.
+ */
+uint32_t audit_get_capcontid(pid_t pid)
+{
+	int capcontid;
+	int len, in;
+	char buf[16], fnbuf[48];
+
+	if ((audit_get_features() & AUDIT_FEATURE_BITMAP_CONTAINERID) == 0)
+		return -2;
+	errno = 0;
+	snprintf(fnbuf, sizeof(fnbuf), "/proc/%d/audit_capcontainerid", pid);
+	in = open(fnbuf, O_NOFOLLOW|O_RDONLY);
+	if (in < 0)
+		return -2;
+	do {
+		len = read(in, buf, sizeof(buf));
+	} while (len < 0 && errno == EINTR);
+	close(in);
+	if (len < 0 || len >= sizeof(buf))
+		return -2;
+	buf[len] = 0;
+	errno = 0;
+	capcontid = strtol(buf, 0, 10);
+	if (errno)
+		return -2;
+	return capcontid;
+}
+
+/*
+ * This function returns 0 on success and 1 on failure
+ */
+int audit_set_capcontid(pid_t pid, uint32_t capcontid)
+{
+	char capcontidbuf[16], fnbuf[48];
+	int o, count, rc = 0;
+
+	if ((audit_get_features() & AUDIT_FEATURE_BITMAP_CONTAINERID) == 0)
+		return -2;
+	errno = 0;
+	count = snprintf(capcontidbuf, sizeof(capcontidbuf), "%u", capcontid);
+	snprintf(fnbuf, sizeof(fnbuf), "/proc/%d/audit_capcontainerid", pid);
+	o = open(fnbuf, O_NOFOLLOW|O_WRONLY|O_TRUNC);
+	if (o >= 0) {
+		int block, offset = 0;
+
+		while (count > 0) {
+			block = write(o, &capcontidbuf[offset], (unsigned int)count);
+			if (block < 0) {
+				if (errno == EINTR)
+					continue;
+				audit_msg(LOG_ERR, "Error writing capcontid");
+				close(o);
+				return 1;
+			}
+			offset += block;
+			count -= block;
+		}
+		close(o);
+	} else {
+		audit_msg(LOG_ERR, "Error opening %s", fnbuf);
+		rc = 1;
+	}
+	return rc;
+}
+
+/*
  * This function will retrieve the audit container identifier or -2 if
  * there is an error.
  */

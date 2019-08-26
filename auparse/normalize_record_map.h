@@ -26,6 +26,7 @@
 _S(AUDIT_USER, "sent-message")
 _S(AUDIT_LOGIN, "changed-login-id-to")
 _S(AUDIT_CONTAINER_OP, "changed-container-id-to")
+_S(AUDIT_SET_CAPCONTID, "set-capcontid-to")
 _S(AUDIT_USER_AUTH, "authenticated")
 _S(AUDIT_USER_ACCT, "was-authorized")
 _S(AUDIT_USER_MGMT, "modified-user-account")

@@ -186,6 +186,7 @@ static int adjust_reply(struct audit_reply *rep, int len)
 		case AUDIT_USER:
 		case AUDIT_LOGIN:
 		case AUDIT_CONTAINER_OP:
+		case AUDIT_SET_CAPCONTID:
 		case AUDIT_KERNEL:
 		case AUDIT_FIRST_USER_MSG...AUDIT_LAST_USER_MSG:
 		case AUDIT_FIRST_USER_MSG2...AUDIT_LAST_USER_MSG2:

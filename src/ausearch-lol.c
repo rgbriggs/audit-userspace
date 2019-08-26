@@ -250,6 +250,8 @@ static void check_events(lol *lo, time_t sec)
 				   (cur->l->e.type >  AUDIT_LOGIN           &&
 				    cur->l->e.type <  AUDIT_CONTAINER_OP   ) ||
 				   (cur->l->e.type >  AUDIT_CONTAINER_OP    &&
+				    cur->l->e.type <  AUDIT_SET_CAPCONTID  ) ||
+				   (cur->l->e.type >  AUDIT_SET_CAPCONTID   &&
 				    cur->l->e.type <  AUDIT_FIRST_EVENT    ) ||
 				    cur->l->e.type == AUDIT_PROCTITLE        ||
 				   (cur->l->e.type >= AUDIT_MAC_UNLBL_ALLOW &&
