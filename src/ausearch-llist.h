@@ -31,6 +31,7 @@
 #include <sys/types.h>
 #include "ausearch-string.h"
 #include "ausearch-avc.h"
+#include "ausearch-contid.h"
 #include "ausearch-common.h"
 
 
@@ -56,7 +57,7 @@ typedef struct
   int arch;             // arch
   int syscall;          // syscall
   uint32_t session_id;  // Login session id
-  slist *contid;        // Container id
+  clist *contid;        // Container id
   long long exit;       // Syscall exit code
   int exit_is_set;      // Syscall exit code is valid
   char *hostname;       // remote hostname

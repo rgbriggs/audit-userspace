@@ -81,10 +81,10 @@ static int audit_contid_init(search_items *s)
 {
 	if (s->contid == NULL) {
 		//create
-		s->contid = malloc(sizeof(slist));
+		s->contid = malloc(sizeof(clist));
 		if (s->contid == NULL)
 			return -1;
-		slist_create(s->contid);
+		clist_create(s->contid);
 	}
 	return 0;
 }
@@ -1471,24 +1471,8 @@ static int parse_container_op(const lnode *n, search_items *s)
 	// skip op
 	// skip opid
 	// get contid
-/*
-	if (event_contid != -1) {
-		str = strstr(term, "contid=");
-		if (str == NULL)
-			return 46;
-		ptr = str + 7;
-		term = strchr(ptr, ' ');
-		if (term == NULL)
-			return 47;
-		*term = 0;
-		errno = 0;
-		s->contid = strtoull(ptr, NULL, 10);
-		if (errno)
-			return 48;
-		*term = ' ';
- */
 	if (event_contid) {
-		snode sn;
+		cnode cn;
 		char *comma, *carrat;
 
 		str = strstr(term, "contid=");
@@ -1498,21 +1482,18 @@ static int parse_container_op(const lnode *n, search_items *s)
 			return 48;
 		str += 7;
 		term = strchr(str, ' ');
-		if (term == NULL)
+		if (!term)
 			return 47;
 		*term = 0;
-		sn.str = strdup(str);
-		sn.key = NULL;
-		sn.hits = 1;
-		slist_append(s->contid, &sn);
+		cn.id = strtoull(str, NULL, 10);
+		cn.hits = 1;
+		clist_append(s->contid, &cn);
 		if (term)
 			*term = ' ';
 	// old-contid
 		str = strstr(term, "old-contid=");
 		if (!str)
-			return 46;
-		if (audit_contid_init(s) < 0)
-			return 48;
+			return 49;
 		str += 11;
 		term = strchr(str, ' ');
 		if (term)
@@ -1525,11 +1506,9 @@ static int parse_container_op(const lnode *n, search_items *s)
 			if (carrat)
 				*carrat = 0;
 			do {
-				sn.str = strdup(str);
-				sn.key = NULL;
-				sn.hits = 1;
-				slist_append(s->contid, &sn);
-
+				cn.id = strtoull(str, NULL, 10);
+				cn.hits = 1;
+				clist_append(s->contid, &cn);
 				if (carrat) {
 					str = carrat + 1;
 					*carrat = '^';
@@ -1553,63 +1532,45 @@ static int parse_container_id(const lnode *n, search_items *s)
 	char *ptr, *str, *term = n->message;
 
 	// get contid
-/*
-	if (event_contid != -1) {
-		str = strstr(term, "contid=");
-		if (str == NULL)
-			return 49;
-		ptr = str + 7;
-		term = strchr(ptr, ' ');
-		if (term)
-			return 50;
-		*term = 0;
-		errno = 0;
-		s->contid = strtoull(ptr, NULL, 10);
-		if (errno)
-			return 51;
-		*term = ' ';
- */
 	if (event_contid) {
+		cnode cn;
+		char *comma, *carrat;
+
 		str = strstr(term, "contid=");
-		if (str) {
-			snode sn;
-			char *comma, *carrat;
-
-			if (audit_contid_init(s) < 0)
-				return 50;
-			str += 7;
-			term = strchr(str, ' ');
-			if (term)
-				*term = 0;
-			comma = strchr(str, ',');
-			if (comma)
-				*comma = 0;
+		if (!str)
+			return 50;
+		if (audit_contid_init(s) < 0)
+			return 51;
+		str += 7;
+		term = strchr(str, ' ');
+		if (term)
+			*term = 0;
+		comma = strchr(str, ',');
+		if (comma)
+			*comma = 0;
+		do {
+			carrat = strchr(str, '^');
+			if (carrat)
+				*carrat = 0;
 			do {
-				carrat = strchr(str, '^');
-				if (carrat)
-					*carrat = 0;
-				do {
-					sn.str = strdup(str);
-					sn.key = NULL;
-					sn.hits = 1;
-					slist_append(s->contid, &sn);
+				cn.id = strtoull(str, NULL, 10);
+				cn.hits = 1;
+				clist_append(s->contid, &cn);
 
-					if (carrat) {
-						str = carrat + 1;
-						*carrat = '^';
-						carrat = strchr(str, '^');
-					}
-				} while (carrat);
-				if (comma) {
-					str = comma + 1;
-					*comma = ',';
-					comma = strchr(str, ',');
+				if (carrat) {
+					str = carrat + 1;
+					*carrat = '^';
+					carrat = strchr(str, '^');
 				}
-			} while (comma);
-			if (term)
-				*term = ' ';
-		} else
-			return 49;
+			} while (carrat);
+			if (comma) {
+				str = comma + 1;
+				*comma = ',';
+				comma = strchr(str, ',');
+			}
+		} while (comma);
+		if (term)
+			*term = ' ';
 	}
 	return 0;
 }

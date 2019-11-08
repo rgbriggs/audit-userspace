@@ -60,7 +60,7 @@ int event_syscall = -1, event_machine = -1;
 int event_ua = 0, event_ga = 0, event_se = 0;
 int just_one = 0;
 uint32_t event_session_id = -2;
-const char *event_contid = NULL;
+clist *event_contid = NULL;
 long long event_exit = 0;
 int event_exit_is_set = 0;
 int line_buffered = 0;
@@ -1201,6 +1201,7 @@ int check_params(int count, char *vars[])
 			size_t len = strlen(optarg);
 			if (isdigit(optarg[0])) {
 				__u64 contid;
+				cnode cn;
 
 				errno = 0;
 				contid = strtoull(optarg,NULL,0);
@@ -1211,21 +1212,21 @@ int check_params(int count, char *vars[])
 					retval = -1;
 				} else {
 					if (!event_contid) {
-						event_contid = malloc(sizeof(slist));
+						event_contid = malloc(sizeof(clist));
 						if (!event_contid) {
 							retval = -1;
 							break;
 						}
-						slist_create(event_contid);
+						clist_create(event_contid);
 					}
-					sn.str = strdup(optarg);
-					sn.key = NULL;
-					sn.hits = 0;
-					slist_append(event_contid, &sn);
+					cn.id = contid;
+					cn.hits = 0;
+					clist_append(event_contid, &cn);
 				}
 			} else if (len >= 2 && *(optarg)=='-' &&
 					(isdigit(optarg[1]))) {
 				__u64 contid;
+				cnode cn;
 
 				errno = 0;
 				contid = strtoll(optarg, NULL, 0);
@@ -1235,17 +1236,16 @@ int check_params(int count, char *vars[])
 						optarg);
 				} else {
 					if (!event_contid) {
-						event_contid = malloc(sizeof(slist));
+						event_contid = malloc(sizeof(clist));
 						if (!event_contid) {
 							retval = -1;
 							break;
 						}
-						slist_create(event_contid);
+						clist_create(event_contid);
 					}
-					sn.str = strdup(optarg);
-					sn.key = NULL;
-					sn.hits = 0;
-					slist_append(event_contid, &sn);
+					cn.id = contid;
+					cn.hits = 0;
+					clist_append(event_contid, &cn);
 				}
 			} else {
 				fprintf(stderr, 

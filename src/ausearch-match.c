@@ -424,32 +424,28 @@ static int context_match(llist *l)
 static int contid_match(llist *l)
 {
 	if (event_contid) {
-		int found = 0;
-		const snode *ecn;
-		slist *ecptr = event_contid;
+		const cnode *ecn;
+		clist *ecptr = event_contid;
 
-		slist_first(ecptr);
-		ecn = slist_get_cur(ecptr);
+		clist_first(ecptr);
+		ecn = clist_get_cur(ecptr);
 		if (l->s.contid) {
-			while (ecn && !found) {
-				const snode *sn;
-				slist *sptr = l->s.contid;
+			while (ecn) {
+				const cnode *cn;
+				clist *cptr = l->s.contid;
 	
-				slist_first(sptr);
-				sn = slist_get_cur(sptr);
-				while (sn && !found) {
-					if (!strcmp(sn->str, ecn->str))
-						found++;
-					else
-						sn = slist_next(sptr);
+				clist_first(cptr);
+				cn = clist_get_cur(cptr);
+				while (cn) {
+					if (cn->id == ecn->id)
+						return 1;
+					cn = clist_next(cptr);
 				}
-				if (found)
-					return found;
-				ecn = slist_next(ecptr);
+				ecn = clist_next(ecptr);
 			}
-			return found;
 		}
+		return 0;
 	}
-	return 0;
+	return 1;
 }
 

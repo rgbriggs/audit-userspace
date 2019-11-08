@@ -213,7 +213,7 @@ void list_clear(llist* l)
 	l->s.syscall = 0;
 	l->s.session_id = -2;
 	if (l->s.contid) {
-		slist_clear(l->s.contid);
+		clist_clear(l->s.contid);
 		free(l->s.contid);
 		l->s.contid = NULL;
 	}
