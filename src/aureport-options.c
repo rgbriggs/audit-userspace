@@ -36,6 +36,7 @@
 #include "ausearch-time.h"
 #include "libaudit.h"
 #include "auparse-defs.h"
+#include "ausearch-contid.h"
 
 
 /* Global vars that will be accessed by the main program */
@@ -62,7 +63,7 @@ const char *event_vmname = NULL;
 long long event_exit = 0;
 int event_exit_is_set = 0;
 int event_ppid = -1, event_session_id = -2;
-unsigned long long event_contid = -1;
+clist *event_contid = NULL;
 int event_debug = 0, event_machine = -1;
 
 /* These are used by aureport */

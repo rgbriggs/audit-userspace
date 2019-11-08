@@ -60,7 +60,7 @@ void list_create(llist *l)
 	l->s.arch = 0;
 	l->s.syscall = 0;
 	l->s.session_id = -2;
-	l->s.contid = -1;
+	l->s.contid = NULL;
 	l->s.uuid = NULL;
 	l->s.vmname = NULL;
 	l->s.tuid = NULL;
@@ -212,7 +212,11 @@ void list_clear(llist* l)
 	l->s.arch = 0;
 	l->s.syscall = 0;
 	l->s.session_id = -2;
-	l->s.contid = -1;
+	if (l->s.contid) {
+		clist_clear(l->s.contid);
+		free(l->s.contid);
+		l->s.contid = NULL;
+	}
 	free(l->s.uuid);
 	l->s.uuid = NULL;
 	free(l->s.vmname);
