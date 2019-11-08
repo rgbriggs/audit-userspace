@@ -79,6 +79,18 @@ static int audit_avc_init(search_items *s)
 	return 0;
 }
 
+static int audit_contid_init(search_items *s)
+{
+	if (s->contid == NULL) {
+		//create
+		s->contid = malloc(sizeof(clist));
+		if (s->contid == NULL)
+			return -1;
+		clist_create(s->contid);
+	}
+	return 0;
+}
+
 /*
  * This function will take the list and extract the searchable fields from it.
  * It returns 0 on success and 1 on failure.
@@ -1489,22 +1501,57 @@ static int parse_container_op(const lnode *n, search_items *s)
 	// skip op
 	// skip opid
 	// get contid
-	if (event_contid != -1) {
+	if (event_contid) {
+		cnode cn;
+		char *comma;
+
 		str = strstr(term, "contid=");
-		if (str == NULL)
+		if (!str)
 			return 46;
-		ptr = str + 7;
-		term = strchr(ptr, ' ');
-		if (term == NULL)
+		if (audit_contid_init(s) < 0)
+			return 48;
+		str += 7;
+		term = strchr(str, ' ');
+		if (!term)
 			return 47;
 		*term = 0;
-		errno = 0;
-		s->contid = strtoull(ptr, NULL, 10);
-		if (errno)
-			return 48;
-		*term = ' ';
+		if (strcmp(str, "-1"))
+			cn.id = strtoull(str, NULL, 10);
+		else
+			cn.id = ULLONG_MAX;
+		cn.hits = 1;
+		clist_append(s->contid, &cn);
+		if (term)
+			*term = ' ';
+	// old-contid
+		str = strstr(term, "old-contid=");
+		if (!str)
+			return 49;
+		str += 11;
+		term = strchr(str, ' ');
+		if (term)
+			*term = 0;
+		comma = strchr(str, ',');
+		if (comma)
+			*comma = 0;
+		do {
+			if (str[0] == '^')
+				str++;
+			if (strcmp(str, "-1"))
+				cn.id = strtoull(str, NULL, 10);
+			else
+				cn.id = ULLONG_MAX;
+			cn.hits = 1;
+			clist_append(s->contid, &cn);
+			if (comma) {
+				str = comma + 1;
+				*comma = ',';
+				comma = strchr(str, ',');
+			}
+		} while (comma);
+		if (term)
+			*term = ' ';
 	}
-	// skip old-contid
 	return 0;
 }
 
@@ -1513,20 +1560,39 @@ static int parse_container_id(const lnode *n, search_items *s)
 	char *ptr, *str, *term = n->message;
 
 	// get contid
-	if (event_contid != -1) {
+	if (event_contid) {
+		cnode cn;
+		char *comma;
+
 		str = strstr(term, "contid=");
-		if (str == NULL)
-			return 49;
-		ptr = str + 7;
-		term = strchr(ptr, ' ');
-		if (term)
+		if (!str)
 			return 50;
-		*term = 0;
-		errno = 0;
-		s->contid = strtoull(ptr, NULL, 10);
-		if (errno)
+		if (audit_contid_init(s) < 0)
 			return 51;
-		*term = ' ';
+		str += 7;
+		term = strchr(str, ' ');
+		if (term)
+			*term = 0;
+		comma = strchr(str, ',');
+		if (comma)
+			*comma = 0;
+		do {
+			if (str[0] == '^')
+				str++;
+			if (strcmp(str, "-1"))
+				cn.id = strtoull(str, NULL, 10);
+			else
+				cn.id = ULLONG_MAX;
+			cn.hits = 1;
+			clist_append(s->contid, &cn);
+			if (comma) {
+				str = comma + 1;
+				*comma = ',';
+				comma = strchr(str, ',');
+			}
+		} while (comma);
+		if (term)
+			*term = ' ';
 	}
 	return 0;
 }

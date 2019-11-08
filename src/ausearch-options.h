@@ -29,6 +29,7 @@
 #include <stdint.h>
 #include "ausearch-common.h"
 #include "ausearch-int.h"
+#include "ausearch-contid.h"
 
 /* Global variables that describe what search is to be performed */
 extern const char *event_key;
@@ -40,7 +41,7 @@ extern int line_buffered;
 extern int event_debug;
 extern pid_t event_ppid;
 extern uint32_t event_session_id;
-extern unsigned long long event_contid;
+extern clist *event_contid;
 extern ilist *event_type;
 
 /* Data type to govern output format */
