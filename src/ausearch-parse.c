@@ -77,6 +77,18 @@ static int audit_avc_init(search_items *s)
 	return 0;
 }
 
+static int audit_contid_init(search_items *s)
+{
+	if (s->contid == NULL) {
+		//create
+		s->contid = malloc(sizeof(slist));
+		if (s->contid == NULL)
+			return -1;
+		slist_create(s->contid);
+	}
+	return 0;
+}
+
 /*
  * This function will take the list and extract the searchable fields from it.
  * It returns 0 on success and 1 on failure.
@@ -1459,6 +1471,7 @@ static int parse_container_op(const lnode *n, search_items *s)
 	// skip op
 	// skip opid
 	// get contid
+/*
 	if (event_contid != -1) {
 		str = strstr(term, "contid=");
 		if (str == NULL)
@@ -1473,8 +1486,65 @@ static int parse_container_op(const lnode *n, search_items *s)
 		if (errno)
 			return 48;
 		*term = ' ';
+ */
+	if (event_contid) {
+		snode sn;
+		char *comma, *carrat;
+
+		str = strstr(term, "contid=");
+		if (!str)
+			return 46;
+		if (audit_contid_init(s) < 0)
+			return 48;
+		str += 7;
+		term = strchr(str, ' ');
+		if (term == NULL)
+			return 47;
+		*term = 0;
+		sn.str = strdup(str);
+		sn.key = NULL;
+		sn.hits = 1;
+		slist_append(s->contid, &sn);
+		if (term)
+			*term = ' ';
+	// old-contid
+		str = strstr(term, "old-contid=");
+		if (!str)
+			return 46;
+		if (audit_contid_init(s) < 0)
+			return 48;
+		str += 11;
+		term = strchr(str, ' ');
+		if (term)
+			*term = 0;
+		comma = strchr(str, ',');
+		if (comma)
+			*comma = 0;
+		do {
+			carrat = strchr(str, '^');
+			if (carrat)
+				*carrat = 0;
+			do {
+				sn.str = strdup(str);
+				sn.key = NULL;
+				sn.hits = 1;
+				slist_append(s->contid, &sn);
+
+				if (carrat) {
+					str = carrat + 1;
+					*carrat = '^';
+					carrat = strchr(str, '^');
+				}
+			} while (carrat);
+			if (comma) {
+				str = comma + 1;
+				*comma = ',';
+				comma = strchr(str, ',');
+			}
+		} while (comma);
+		if (term)
+			*term = ' ';
 	}
-	// skip old-contid
 	return 0;
 }
 
@@ -1483,6 +1553,7 @@ static int parse_container_id(const lnode *n, search_items *s)
 	char *ptr, *str, *term = n->message;
 
 	// get contid
+/*
 	if (event_contid != -1) {
 		str = strstr(term, "contid=");
 		if (str == NULL)
@@ -1497,6 +1568,48 @@ static int parse_container_id(const lnode *n, search_items *s)
 		if (errno)
 			return 51;
 		*term = ' ';
+ */
+	if (event_contid) {
+		str = strstr(term, "contid=");
+		if (str) {
+			snode sn;
+			char *comma, *carrat;
+
+			if (audit_contid_init(s) < 0)
+				return 50;
+			str += 7;
+			term = strchr(str, ' ');
+			if (term)
+				*term = 0;
+			comma = strchr(str, ',');
+			if (comma)
+				*comma = 0;
+			do {
+				carrat = strchr(str, '^');
+				if (carrat)
+					*carrat = 0;
+				do {
+					sn.str = strdup(str);
+					sn.key = NULL;
+					sn.hits = 1;
+					slist_append(s->contid, &sn);
+
+					if (carrat) {
+						str = carrat + 1;
+						*carrat = '^';
+						carrat = strchr(str, '^');
+					}
+				} while (carrat);
+				if (comma) {
+					str = comma + 1;
+					*comma = ',';
+					comma = strchr(str, ',');
+				}
+			} while (comma);
+			if (term)
+				*term = ' ';
+		} else
+			return 49;
 	}
 	return 0;
 }

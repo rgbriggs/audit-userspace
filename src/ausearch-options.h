@@ -40,7 +40,7 @@ extern int line_buffered;
 extern int event_debug;
 extern pid_t event_ppid;
 extern uint32_t event_session_id;
-extern unsigned long long int event_contid;
+extern const char *event_contid;
 extern ilist *event_type;
 
 /* Data type to govern output format */

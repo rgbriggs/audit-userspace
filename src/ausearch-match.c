@@ -37,6 +37,7 @@ static int strmatch(const char *needle, const char *haystack);
 static int user_match(llist *l);
 static int group_match(llist *l);
 static int context_match(llist *l);
+static int contid_match(llist *l);
 
 static void load_interpretations(const llist *l)
 {
@@ -113,8 +114,7 @@ int match(llist *l)
 				if ((event_session_id != -2) &&
 					(event_session_id != l->s.session_id))
 					return 0;
-				if ((event_contid != -1) &&
-					(event_contid != l->s.contid))
+				if (contid_match(l) == 0)
 					return 0;
 				if (event_exit_is_set) {
 					if (l->s.exit_is_set == 0)
@@ -415,5 +415,41 @@ static int context_match(llist *l)
 		}
 	}
 	return 1;
+}
+
+/*
+ * This function compares container ids. It returns a 0 if no match and a 1 if
+ * there is a match 
+ */
+static int contid_match(llist *l)
+{
+	if (event_contid) {
+		int found = 0;
+		const snode *ecn;
+		slist *ecptr = event_contid;
+
+		slist_first(ecptr);
+		ecn = slist_get_cur(ecptr);
+		if (l->s.contid) {
+			while (ecn && !found) {
+				const snode *sn;
+				slist *sptr = l->s.contid;
+	
+				slist_first(sptr);
+				sn = slist_get_cur(sptr);
+				while (sn && !found) {
+					if (!strcmp(sn->str, ecn->str))
+						found++;
+					else
+						sn = slist_next(sptr);
+				}
+				if (found)
+					return found;
+				ecn = slist_next(ecptr);
+			}
+			return found;
+		}
+	}
+	return 0;
 }
 

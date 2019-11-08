@@ -293,7 +293,7 @@ no_print:
 			} else if (str && (val == NULL)) {
 			// Goes all the way to the end. Done parsing
 			// Known: MCS context in PATH rec obj=u:r:t:s0:c2,c7
-			// Known: CONTAINER_ID contid can be a comma-separated list
+			// Known: CONTAINER_ID contid can be a comma/carrat-separated list
 				int ftype = auparse_interp_adjust_type(n->type,
 								name, ptr);
 				if (ftype == AUPARSE_TYPE_MAC_LABEL
