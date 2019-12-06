@@ -539,6 +539,27 @@ int audit_reset_lost(int fd)
 	return rc;
 }
 
+int audit_set_contid_depth_limit(int fd, uint32_t limit)
+{
+	int rc = -1;
+#if HAVE_DECL_AUDIT_STATUS_CONTID_DEPTH_LIMIT == 1
+	struct audit_status s;
+
+	if ((audit_get_features() & AUDIT_FEATURE_BITMAP_CONTAINERID) == 0)
+		return -EAU_FIELDNOSUPPORT;
+
+	memset(&s, 0, sizeof(s));
+	s.mask = AUDIT_STATUS_CONTID_DEPTH_LIMIT;
+	s.contid_depth_limit = limit;
+	rc = audit_send(fd, AUDIT_SET, &s, sizeof(s));
+	if (rc < 0)
+		audit_msg(audit_priority(errno),
+			"Error sending contid depth limit request (%s)", 
+			strerror(-rc));
+#endif
+	return rc;
+}
+
 int audit_set_feature(int fd, unsigned feature, unsigned value, unsigned lock)
 {
 #if defined(HAVE_DECL_AUDIT_FEATURE_VERSION) && \

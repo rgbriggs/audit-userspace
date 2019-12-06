@@ -144,6 +144,9 @@ static void usage(void)
 #if defined(HAVE_STRUCT_AUDIT_STATUS_FEATURE_BITMAP)
      "    --reset-lost         Reset the lost record counter\n"
 #endif
+#if HAVE_DECL_AUDIT_STATUS_CONTID_DEPTH_LIMIT
+     "    --contid-depth-limit Set the kernel audit container identifier depth limit\n"
+#endif
      );
 }
 
@@ -457,6 +460,9 @@ struct option long_opts[] =
 #endif
 #if defined(HAVE_STRUCT_AUDIT_STATUS_FEATURE_BITMAP)
   {"reset-lost", 0, NULL, 3},
+#endif
+#if HAVE_DECL_AUDIT_STATUS_CONTID_DEPTH_LIMIT == 1
+  {"contid-depth-limit", 1, NULL, 4},
 #endif
   {NULL, 0, NULL, 0}
 };
@@ -1006,6 +1012,33 @@ process_keys:
 			audit_number_to_errmsg(rc, long_opts[lidx].name);
 			retval = -1;
 		}
+		break;
+	case 4:
+#if HAVE_DECL_AUDIT_STATUS_CONTID_DEPTH_LIMIT == 1
+		if (optarg && isdigit(optarg[0])) {
+			uint32_t limit;
+			errno = 0;
+			limit = strtoul(optarg,NULL,0);
+			if (errno) {
+				audit_msg(LOG_ERR,
+					"Error converting contid-depth-limit");
+				return -1;
+			}
+			if (audit_set_contid_depth_limit(fd, limit) > 0)
+				audit_request_status(fd);
+			else
+				return -1;
+		} else {
+			audit_msg(LOG_ERR, 
+			    "contid-depth-limit must be a numeric value was %s", 
+				optarg);
+			retval = -1;
+		}
+#else
+		audit_msg(LOG_ERR,
+			"contid-depth-limit is not supported on your kernel");
+		retval = -1;
+#endif
 		break;
         default: 
 		usage();
