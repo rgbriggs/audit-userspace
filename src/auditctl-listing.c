@@ -590,6 +590,10 @@ int audit_print_reply(struct audit_reply *rep, int fd)
 			printf("contid_depth_limit %u\n",
 				rep->status->contid_depth_limit);
 #endif
+#if HAVE_DECL_AUDIT_STATUS_CONTID_NETNS_LIMIT == 1
+			printf("contid_netns_limit %u\n",
+				rep->status->contid_netns_limit);
+#endif
 			printed = 1;
 			break;
 #if defined(HAVE_DECL_AUDIT_FEATURE_VERSION) && \

@@ -1,0 +1,25 @@
+.TH "AUDIT_SET_CONTID_NETNS_LIMIT" "18" "Dec 2019" "Linux Audit API"
+.SH NAME
+audit_set_contid_netns_limit \- Set the audit container identifier network namespace limit
+.SH "SYNOPSIS"
+
+.B #include <libaudit.h>
+.sp
+int audit_set_contid_netns_limit (int fd, int limit);
+
+.SH "DESCRIPTION"
+
+audit_set_contid_netns_limit sets the audit container identifier network namespace limit that the kernel will permit before preventing any further nesting.  This prevents the contid field in AUDIT_CONTAINER_OP and AUDIT_CONTAINER_ID messages from overflowing and limits the netlink and disk bandwidth these messages can use.  This parameter works in conjunction with contid_depth_limit.  The two parameters multiplied cannot exceed 400.  The default value is 100 in the kernel with a maximum of 400 when contid_depth_limit is set to 1.  If set to zero, there is no limit.
+
+.SH "RETURN VALUE"
+
+The return value is <= 0 on error, otherwise it is the netlink sequence id number. This function can have any error that sendto would encounter.
+
+.SH "SEE ALSO"
+
+.BR audit_open (3),
+.BR auditd (8),
+.BR auditctl (8).
+
+.SH AUTHOR
+Richard Guy Briggs

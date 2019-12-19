@@ -147,6 +147,9 @@ static void usage(void)
 #if HAVE_DECL_AUDIT_STATUS_CONTID_DEPTH_LIMIT
      "    --contid-depth-limit Set the kernel audit container identifier depth limit\n"
 #endif
+#if HAVE_DECL_AUDIT_STATUS_CONTID_NETNS_LIMIT
+     "    --contid-netns-limit Set the kernel audit container identifier netns limit\n"
+#endif
      );
 }
 
@@ -463,6 +466,9 @@ struct option long_opts[] =
 #endif
 #if HAVE_DECL_AUDIT_STATUS_CONTID_DEPTH_LIMIT == 1
   {"contid-depth-limit", 1, NULL, 4},
+#endif
+#if HAVE_DECL_AUDIT_STATUS_CONTID_NETNS_LIMIT == 1
+  {"contid-netns-limit", 1, NULL, 5},
 #endif
   {NULL, 0, NULL, 0}
 };
@@ -1037,6 +1043,33 @@ process_keys:
 #else
 		audit_msg(LOG_ERR,
 			"contid-depth-limit is not supported on your kernel");
+		retval = -1;
+#endif
+		break;
+	case 5:
+#if HAVE_DECL_AUDIT_STATUS_CONTID_NETNS_LIMIT == 1
+		if (optarg && isdigit(optarg[0])) {
+			uint32_t limit;
+			errno = 0;
+			limit = strtoul(optarg,NULL,0);
+			if (errno) {
+				audit_msg(LOG_ERR,
+					"Error converting contid-netns-limit");
+				return -1;
+			}
+			if (audit_set_contid_netns_limit(fd, limit) > 0)
+				audit_request_status(fd);
+			else
+				return -1;
+		} else {
+			audit_msg(LOG_ERR, 
+			    "contid-netns-limit must be a numeric value was %s", 
+				optarg);
+			retval = -1;
+		}
+#else
+		audit_msg(LOG_ERR,
+			"contid-netns-limit is not supported on your kernel");
 		retval = -1;
 #endif
 		break;

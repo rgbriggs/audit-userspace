@@ -61,5 +61,6 @@ ausearch_next_event.3 ausearch_set_stop.3 \
 autrace.8 get_auditfail_action.3 set_aumessage_mode.3 \
 audispd-zos-remote.8 libaudit.conf.5 \
 augenrules.8 audit_set_backlog_wait_time.3 audit_set_contid_depth_limit.3 \
+audit_set_contid_netns_limit.3 \
 zos-remote.conf.5 
 
