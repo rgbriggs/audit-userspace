@@ -2622,24 +2622,24 @@ try_again:
 	// optionally get loginuid
 	if ((s->loginuid == -2 && !s->tauid) && (event_loginuid != -2 || event_tauid)) {
 		str = strstr(term, "auid=");
-		if (str == NULL) {
-			str = strstr(term, "loginuid=");
-			if (str == NULL)
-				return 60;
-			ptr = str + 9;
-		} else
+		if (str) {
 			ptr = str + 5;
-		term = strchr(ptr, ' ');
-		if (term == NULL)
-			return 61;
-		*term = 0;
-		errno = 0;
-		s->loginuid = strtoul(ptr, NULL, 10);
-		if (errno)
-			return 62;
-		*term = ' ';
-		if (s->tauid) free((void *)s->tauid);
-		s->tauid = lookup_uid("auid", s->loginuid);
+			term = strchr(ptr, ' ');
+			if (term == NULL)
+				return 58;
+			*term = 0;
+			errno = 0;
+			s->loginuid = strtoul(ptr, NULL, 10);
+			if (errno)
+				return 59;
+			*term = ' ';
+			if (s->tauid) free((void *)s->tauid);
+			s->tauid = lookup_uid("auid", s->loginuid);
+		} else {
+			s->loginuid = -1;
+			if (s->tauid) free((void *)s->tauid);
+			s->tauid = lookup_uid("auid", s->loginuid);
+		}
 	}
 	// optionally get tty
 	if (!s->terminal && event_terminal) {
@@ -2649,13 +2649,14 @@ try_again:
 			str += 4;
 			term = strchr(str, ' ');
 			if (term == NULL)
-				return 63;
+				return 60;
 			*term = 0;
 			if (s->terminal) // ANOM_NETLINK has one
 				free(s->terminal);
 			s->terminal = strdup(str);
 			*term = ' ';
-		}
+		} else
+			s->terminal = strdup("(none)");
 	}
 	// optionally get ses
 	if (s->session_id == -2 && event_session_id != -2 ) {
@@ -2664,12 +2665,12 @@ try_again:
 			ptr = str + 4;
 			term = strchr(ptr, ' ');
 			if (term == NULL)
-				return 64;
+				return 61;
 			*term = 0;
 			errno = 0;
 			s->session_id = strtoul(ptr, NULL, 10);
 			if (errno)
-				return 65;
+				return 62;
 			*term = ' ';
 		}
 	}
@@ -2681,7 +2682,7 @@ try_again:
 			str += 5;
 			term = strchr(str, ' ');
 			if (term == NULL)
-				return 66;
+				return 63;
 			*term = 0;
 			if (audit_avc_init(s) == 0) {
 				anode an;
@@ -2691,7 +2692,7 @@ try_again:
 				alist_append(s->avc, &an);
 				*term = ' ';
 			} else
-				return 67;
+				return 64;
 		}
 	}
 	// optionally get command line
@@ -2707,14 +2708,14 @@ try_again:
 				str++;
 				term = strchr(str, '"');
 				if (term == NULL)
-					return 68;
+					return 65;
 				*term = 0;
 				s->comm = strdup(str);
 				*term = '"';
 			} else 
 				s->comm = unescape(str);
 		} else
-			return 69;
+			return 66;
 	}
 	// optionally get exe
 	if (!s->exe && event_exe) {
@@ -2726,14 +2727,14 @@ try_again:
 				str++;
 				term = strchr(str, '"');
 				if (term == NULL)
-					return 70;
+					return 67;
 				*term = 0;
 				s->exe = strdup(str);
 				*term = '"';
 			} else 
 				s->exe = unescape(str);
 		} else
-			return 71;
+			s->exe = strdup("(null)");
 	}
 	return 0;
 }
