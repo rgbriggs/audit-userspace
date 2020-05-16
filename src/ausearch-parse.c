@@ -2617,26 +2617,26 @@ static int parse_yaasao(lnode *n, search_items *s)
 		if (s->tuid) free((void *)s->tuid);
 		s->tuid = lookup_uid("uid", s->uid);
 	}
-	// get loginuid if not already filled
+	// optionally get loginuid if not already filled
 	if ((s->loginuid == -2 && !s->tauid) && (event_loginuid != -2 || event_tauid)) {
 		str = strstr(term, "auid=");
-		if (str == NULL) {
-			return 59;
-		} else
+		if (str) {
 			ptr = str + 5;
-		term = strchr(ptr, ' ');
-		if (term == NULL)
-			return 60;
-		*term = 0;
-		errno = 0;
-		s->loginuid = strtoul(ptr, NULL, 10);
-		if (errno)
+			term = strchr(ptr, ' ');
+			if (term == NULL)
+				return 59;
+			*term = 0;
+			errno = 0;
+			s->loginuid = strtoul(ptr, NULL, 10);
+			if (errno)
+				return 60;
+			*term = ' ';
+			if (s->tauid) free((void *)s->tauid);
+			s->tauid = lookup_uid("auid", s->loginuid);
+		} else
 			return 61;
-		*term = ' ';
-		if (s->tauid) free((void *)s->tauid);
-		s->tauid = lookup_uid("auid", s->loginuid);
 	}
-	// get tty if not already filled
+	// optionally get tty if not already filled
 	if (!s->terminal && event_terminal) {
 		// dont do this search unless needed
 		str = strstr(term, "tty=");
@@ -2650,9 +2650,10 @@ static int parse_yaasao(lnode *n, search_items *s)
 				free(s->terminal);
 			s->terminal = strdup(str);
 			*term = ' ';
-		}
+		} else
+			s->terminal = strdup("(none)");
 	}
-	// get ses if not already filled
+	// optionally get ses if not already filled
 	if (s->session_id == -2 && event_session_id != -2 ) {
 		str = strstr(term, "ses=");
 		if (str) {
@@ -2666,7 +2667,8 @@ static int parse_yaasao(lnode *n, search_items *s)
 			if (errno)
 				return 64;
 			*term = ' ';
-		}
+		} else
+			s->session_id = (unsigned long)-1;
 	}
 	// get subject if not already filled
 	if (!s->avc && event_subject) {
@@ -2729,7 +2731,7 @@ static int parse_yaasao(lnode *n, search_items *s)
 			} else 
 				s->exe = unescape(str);
 		} else
-			return 71;
+			s->exe = strdup("(null)");
 	}
 	return 0;
 }
