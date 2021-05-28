@@ -648,7 +648,6 @@ extern int audit_request_signal_info(int fd);
 /* AUDIT_WATCH */
 extern int audit_update_watch_perms(struct audit_rule_data *rule, int perms);
 extern int audit_add_watch(struct audit_rule_data **rulep, const char *path);
-extern int audit_add_dir(struct audit_rule_data **rulep, const char *path);
 extern int audit_add_watch_dir(int type, struct audit_rule_data **rulep,
 				const char *path);
 extern int audit_trim_subtrees(int fd);
