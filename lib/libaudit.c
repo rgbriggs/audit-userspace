@@ -1044,7 +1044,7 @@ int audit_rule_interfield_comp_data(struct audit_rule_data **rulep,
 		return -EAU_COMPVALUNKNOWN;
 
 	/* Interfield comparison can only be in exit filter */
-	if (flags != AUDIT_FILTER_EXIT)
+	if (flags != AUDIT_FILTER_EXIT && flags != AUDIT_FILTER_URING_EXIT)
 		return -EAU_EXITONLY;
 
 	// It should always be AUDIT_FIELD_COMPARE
@@ -1557,7 +1557,8 @@ int audit_rule_fieldpair_data(struct audit_rule_data **rulep, const char *pair,
 			}
 			break;
 		case AUDIT_EXIT:
-			if (flags != AUDIT_FILTER_EXIT)
+			if (flags != AUDIT_FILTER_EXIT &&
+			    flags != AUDIT_FILTER_URING_EXIT)
 				return -EAU_EXITONLY;
 			vlen = strlen(v);
 			if (isdigit((char)*(v)))
@@ -1599,7 +1600,8 @@ int audit_rule_fieldpair_data(struct audit_rule_data **rulep, const char *pair,
 		case AUDIT_DIR:
 			/* Watch & object filtering is invalid on anything
 			 * but exit */
-			if (flags != AUDIT_FILTER_EXIT)
+			if (flags != AUDIT_FILTER_EXIT &&
+			    flags != AUDIT_FILTER_URING_EXIT)
 				return -EAU_EXITONLY;
 			if (field == AUDIT_WATCH || field == AUDIT_DIR)
 				_audit_permadded = 1;
@@ -1679,7 +1681,8 @@ int audit_rule_fieldpair_data(struct audit_rule_data **rulep, const char *pair,
 			_audit_archadded = 1;
 			break;
 		case AUDIT_PERM:
-			if (flags != AUDIT_FILTER_EXIT)
+			if (flags != AUDIT_FILTER_EXIT &&
+			    flags != AUDIT_FILTER_URING_EXIT)
 				return -EAU_EXITONLY;
 			else if (op != AUDIT_EQUAL)
 				return -EAU_OPEQ;
@@ -1712,7 +1715,8 @@ int audit_rule_fieldpair_data(struct audit_rule_data **rulep, const char *pair,
 			}
 			break;
 		case AUDIT_FILETYPE:
-			if (!(flags == AUDIT_FILTER_EXIT))
+			if (!(flags == AUDIT_FILTER_EXIT ||
+			      flags == AUDIT_FILTER_URING_EXIT))
 				return -EAU_EXITONLY;
 			rule->values[rule->field_count] =
 				audit_name_to_ftype(v);
@@ -1754,7 +1758,8 @@ int audit_rule_fieldpair_data(struct audit_rule_data **rulep, const char *pair,
 				return -EAU_FIELDNOSUPPORT;
 			if (flags != AUDIT_FILTER_EXCLUDE &&
 			    flags != AUDIT_FILTER_USER &&
-			    flags != AUDIT_FILTER_EXIT)
+			    flags != AUDIT_FILTER_EXIT &&
+			    flags != AUDIT_FILTER_URING_EXIT)
 				return -EAU_FIELDNOFILTER;
 			// Do positive & negative separate for 32 bit systems
 			vlen = strlen(v);
@@ -1775,7 +1780,8 @@ int audit_rule_fieldpair_data(struct audit_rule_data **rulep, const char *pair,
 			break;
 		case AUDIT_DEVMAJOR...AUDIT_INODE:
 		case AUDIT_SUCCESS:
-			if (flags != AUDIT_FILTER_EXIT)
+			if (flags != AUDIT_FILTER_EXIT &&
+			    flags != AUDIT_FILTER_URING_EXIT)
 				return -EAU_EXITONLY;
 			/* fallthrough */
 		default:
@@ -1785,7 +1791,9 @@ int audit_rule_fieldpair_data(struct audit_rule_data **rulep, const char *pair,
 					return -EAU_OPEQNOTEQ;
 			}
 
-			if (field == AUDIT_PPID && !(flags==AUDIT_FILTER_EXIT))
+			if (field == AUDIT_PPID &&
+			    !(flags == AUDIT_FILTER_EXIT ||
+			      flags == AUDIT_FILTER_URING_EXIT))
 				return -EAU_EXITONLY;
 
 			if (!isdigit((char)*(v)))

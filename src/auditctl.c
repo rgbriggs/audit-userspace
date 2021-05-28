@@ -110,7 +110,7 @@ static void usage(void)
      "    -C f=f                            Compare collected fields if available:\n"
      "                                      Field name, operator(=,!=), field name\n"
      "    -d <l,a>                          Delete rule from <l>ist with <a>ction\n"
-     "                                      l=task,exit,user,exclude,filesystem\n"
+     "                                      l=task,exit,user,exclude,filesystem,uring\n"
      "                                      a=never,always\n"
      "    -D                                Delete all rules and watches\n"
      "    -e [0..2]                         Set enabled flag\n"
@@ -157,6 +157,8 @@ static int lookup_filter(const char *str, int *filter)
 		*filter = AUDIT_FILTER_TASK;
 	else if (strcmp(str, "exit") == 0)
 		*filter = AUDIT_FILTER_EXIT;
+	else if (strcmp(str, "uring") == 0)
+		*filter = AUDIT_FILTER_URING_EXIT;
 	else if (strcmp(str, "user") == 0)
 		*filter = AUDIT_FILTER_USER;
 	else if (strcmp(str, "filesystem") == 0)

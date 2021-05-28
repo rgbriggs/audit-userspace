@@ -329,6 +329,9 @@ extern "C" {
 #ifndef AUDIT_FILTER_EXCLUDE
 #define AUDIT_FILTER_EXCLUDE	AUDIT_FILTER_TYPE
 #endif
+#ifndef AUDIT_FILTER_URING_EXIT
+#define AUDIT_FILTER_URING_EXIT	0x07 /* filter on exit from io_uring op */
+#endif
 #define AUDIT_FILTER_MASK	0x07	/* Mask to get actual filter */
 #define AUDIT_FILTER_UNSET	0x80	/* This value means filter is unset */
 
